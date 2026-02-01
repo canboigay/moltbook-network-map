@@ -1,0 +1,172 @@
+#!/usr/bin/env python3
+"""
+Moltbook Network Map - Data Collector
+Fetches agents, posts, and interactions from the Moltbook API
+"""
+
+import requests
+import json
+import sys
+from collections import defaultdict
+
+API_BASE = "https://moltbook-api.simeon-garratt.workers.dev/v1"
+
+def get_api_key():
+    """Read API key from credentials file"""
+    try:
+        with open('/Users/simeong/.config/moltbook/credentials.json') as f:
+            return json.load(f)['api_key']
+    except Exception as e:
+        print(f"Error reading API key: {e}")
+        sys.exit(1)
+
+def fetch_all_posts(api_key, limit=100):
+    """Fetch all posts from the main feed"""
+    headers = {"Authorization": f"Bearer {api_key}"}
+    all_posts = []
+    cursor = None
+    
+    print("Fetching posts...")
+    while True:
+        url = f"{API_BASE}/feed?limit={limit}"
+        if cursor:
+            url += f"&cursor={cursor}"
+        
+        try:
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+            data = response.json()
+            
+            posts = data.get('posts', [])
+            if not posts:
+                break
+            
+            all_posts.extend(posts)
+            print(f"  Fetched {len(all_posts)} posts...")
+            
+            cursor = data.get('pagination', {}).get('next')
+            if not cursor:
+                break
+                
+        except Exception as e:
+            print(f"Error fetching posts: {e}")
+            break
+    
+    print(f"✓ Total posts fetched: {len(all_posts)}")
+    return all_posts
+
+def fetch_submolts(api_key):
+    """Fetch all submolts"""
+    headers = {"Authorization": f"Bearer {api_key}"}
+    
+    try:
+        response = requests.get(f"{API_BASE}/submolts", headers=headers)
+        response.raise_for_status()
+        submolts = response.json().get('submolts', [])
+        print(f"✓ Fetched {len(submolts)} submolts")
+        return submolts
+    except Exception as e:
+        print(f"Error fetching submolts: {e}")
+        return []
+
+def build_network_graph(posts):
+    """Build network graph from posts data"""
+    nodes = {}  # agent_id -> {username, karma, posts_count}
+    edges = []  # {source, target, weight, type}
+    
+    print("\nBuilding network graph...")
+    
+    # Build nodes from post authors
+    for post in posts:
+        author_id = post['author']['id']
+        author_name = post['author']['username']
+        
+        if author_id not in nodes:
+            nodes[author_id] = {
+                'id': author_id,
+                'username': author_name,
+                'posts_count': 0,
+                'karma': 0,
+                'comments_made': 0
+            }
+        
+        nodes[author_id]['posts_count'] += 1
+        nodes[author_id]['karma'] += post.get('upvotes', 0)
+    
+    # Build edges (we'd need comments/upvotes data for full network)
+    # For now, let's create edges based on submolt co-occurrence
+    submolt_members = defaultdict(set)
+    
+    for post in posts:
+        submolt = post.get('submolt', 'm/general')
+        author_id = post['author']['id']
+        submolt_members[submolt].add(author_id)
+    
+    # Create edges between agents in same submolt
+    for submolt, members in submolt_members.items():
+        members_list = list(members)
+        for i, agent1 in enumerate(members_list):
+            for agent2 in members_list[i+1:]:
+                # Check if edge already exists
+                existing = next((e for e in edges if 
+                               (e['source'] == agent1 and e['target'] == agent2) or
+                               (e['source'] == agent2 and e['target'] == agent1)), None)
+                
+                if existing:
+                    existing['weight'] += 1
+                else:
+                    edges.append({
+                        'source': agent1,
+                        'target': agent2,
+                        'weight': 1,
+                        'type': 'submolt_cooccurrence'
+                    })
+    
+    print(f"✓ Created {len(nodes)} nodes and {len(edges)} edges")
+    
+    return {
+        'nodes': list(nodes.values()),
+        'edges': edges,
+        'metadata': {
+            'total_posts': len(posts),
+            'total_agents': len(nodes),
+            'total_connections': len(edges)
+        }
+    }
+
+def main():
+    print("🕸️  Moltbook Network Map - Data Collector")
+    print("=" * 50)
+    
+    api_key = get_api_key()
+    
+    # Fetch data
+    posts = fetch_all_posts(api_key)
+    submolts = fetch_submolts(api_key)
+    
+    # Build graph
+    graph = build_network_graph(posts)
+    
+    # Add submolts to metadata
+    graph['metadata']['submolts'] = submolts
+    
+    # Save to file
+    output_file = 'network-data.json'
+    with open(output_file, 'w') as f:
+        json.dump(graph, f, indent=2)
+    
+    print(f"\n✓ Network data saved to {output_file}")
+    print(f"\nStats:")
+    print(f"  - {graph['metadata']['total_agents']} agents")
+    print(f"  - {graph['metadata']['total_posts']} posts")
+    print(f"  - {graph['metadata']['total_connections']} connections")
+    print(f"  - {len(submolts)} submolts")
+    
+    # Print top agents by karma
+    top_agents = sorted(graph['nodes'], key=lambda x: x['karma'], reverse=True)[:10]
+    print(f"\n📊 Top 10 Agents by Karma:")
+    for i, agent in enumerate(top_agents, 1):
+        print(f"  {i}. {agent['username']}: {agent['karma']} karma ({agent['posts_count']} posts)")
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,5 @@
+node_modules/
+.server.pid
+*.pyc
+__pycache__/
+.DS_Store
