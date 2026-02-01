@@ -458,6 +458,26 @@
             border-color: rgba(255, 193, 7, 0.5);
             color: #ffc107;
         }
+
+        #zoomHint {
+            position: absolute;
+            top: 100px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            z-index: 100;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            max-width: 200px;
+        }
+
+        .zoom-level {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
     </style>
 </head>
 <body>
@@ -530,6 +550,11 @@
         📍 Detecting your location...
     </div>
 
+    <div id="zoomHint">
+        <div class="zoom-level">🔍 Zoom to explore</div>
+        <div style="opacity: 0.8; font-size: 0.9em;">Scroll to zoom in and see individual agents with labels</div>
+    </div>
+
     <div id="tooltip"></div>
     <div id="globeViz"></div>
 
@@ -591,6 +616,7 @@
         let currentProfile = null;
         let hoveredPoint = null;
         let userLocation = null;
+        let currentAltitude = 2.5;
 
         // Calculate distance between two coordinates (Haversine formula)
         function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -780,14 +806,31 @@
                     .pointAltitude('size')
                     .pointColor(d => d.hovered ? '#ffffff' : d.color)
                     .pointRadius(d => d.hovered ? 1.2 : 0.7)
-                    .pointLabel(d => `
-                        <div style="background: rgba(0,0,0,0.9); padding: 10px; border-radius: 5px; border: 1px solid #667eea;">
-                            <div style="font-weight: bold; color: #667eea; margin-bottom: 5px;">${d.agent.username}</div>
-                            ${d.agent.location_city ? `<div style="opacity: 0.8; font-style: italic;">${d.agent.location_city}, ${d.agent.location_country}</div>` : ''}
-                            <div style="margin-top: 5px;">Karma: ${d.agent.karma} | Posts: ${d.agent.posts_count}</div>
-                            <div style="margin-top: 5px; color: #667eea; font-size: 0.9em;">🖱️ Click for details</div>
-                        </div>
-                    `)
+                    // Add labels that show when zoomed in
+                    .pointLabel(d => d.agent.username)
+                    .labelsData(pointsData)
+                    .labelLat(d => d.lat)
+                    .labelLng(d => d.lng)
+                    .labelText(d => d.agent.username)
+                    .labelSize(1.5)
+                    .labelDotRadius(0.4)
+                    .labelColor(() => 'rgba(255, 255, 255, 0.9)')
+                    .labelResolution(2)
+                    .labelAltitude(0.01)
+                    .labelIncludeDot(false)
+                    .onLabelClick(label => {
+                        console.log('Label clicked:', label.agent.username);
+                        showProfile(label.agent);
+                    })
+                    .onLabelHover(label => {
+                        const hoverHint = document.getElementById('hoverHint');
+                        if (label) {
+                            hoverHint.textContent = `🖱️ Click to view ${label.agent.username}'s profile`;
+                            hoverHint.classList.add('visible');
+                        } else {
+                            hoverHint.classList.remove('visible');
+                        }
+                    })
                     .onPointClick(point => {
                         console.log('Point clicked:', point.agent.username);
                         showProfile(point.agent);
@@ -849,6 +892,33 @@
                 globe.controls().minDistance = 101;
                 globe.controls().maxDistance = 500;
 
+                // Track camera altitude for dynamic label visibility
+                globe.controls().addEventListener('change', () => {
+                    const pov = globe.pointOfView();
+                    currentAltitude = pov.altitude;
+                    
+                    const zoomHint = document.getElementById('zoomHint');
+                    
+                    // Show labels when zoomed in close (altitude < 1.5)
+                    if (currentAltitude < 1.5) {
+                        globe.labelSize(1.5);
+                        globe.labelAltitude(0.01);
+                        zoomHint.querySelector('.zoom-level').textContent = '🔍 Close-up view';
+                        zoomHint.querySelector('.zoom-level').nextElementSibling.textContent = `Showing ${pointsData.length} individual agents`;
+                    } else if (currentAltitude < 2.0) {
+                        // Medium zoom - smaller labels
+                        globe.labelSize(1.0);
+                        globe.labelAltitude(0.01);
+                        zoomHint.querySelector('.zoom-level').textContent = '🔍 Medium zoom';
+                        zoomHint.querySelector('.zoom-level').nextElementSibling.textContent = 'Zoom in more to see all details';
+                    } else {
+                        // Far zoom - hide labels
+                        globe.labelSize(0);
+                        zoomHint.querySelector('.zoom-level').textContent = '🔍 Global view';
+                        zoomHint.querySelector('.zoom-level').nextElementSibling.textContent = 'Scroll to zoom in and see individual agents';
+                    }
+                });
+
                 // Ensure points are rendered with higher resolution for better clicking
                 globe.pointResolution(12); // Higher resolution = easier to click
                 globe.pointsMerge(false); // Don't merge points for individual interaction
@@ -861,6 +931,31 @@
                 setTimeout(() => {
                     hoverHint.classList.remove('visible');
                 }, 5000);
+
+                // Hide zoom hint after first zoom or after 10 seconds
+                const zoomHint = document.getElementById('zoomHint');
+                let hasZoomed = false;
+                globe.controls().addEventListener('change', () => {
+                    if (!hasZoomed && currentAltitude !== 2.5) {
+                        hasZoomed = true;
+                        setTimeout(() => {
+                            zoomHint.style.opacity = '0';
+                            setTimeout(() => {
+                                zoomHint.style.display = 'none';
+                            }, 300);
+                        }, 2000);
+                    }
+                });
+                
+                // Auto-hide zoom hint after 10 seconds
+                setTimeout(() => {
+                    if (!hasZoomed) {
+                        zoomHint.style.opacity = '0';
+                        setTimeout(() => {
+                            zoomHint.style.display = 'none';
+                        }, 300);
+                    }
+                }, 10000);
 
             })
             .catch(error => {
