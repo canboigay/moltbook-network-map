@@ -213,6 +213,180 @@
             background: #667eea;
             box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
         }
+
+        /* Profile Modal */
+        #profileModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #profileModal.visible {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, rgba(20, 20, 30, 0.95) 0%, rgba(30, 30, 50, 0.95) 100%);
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 2px solid rgba(102, 126, 234, 0.5);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+
+        .profile-header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .profile-username {
+            font-size: 2em;
+            font-weight: bold;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .profile-location {
+            font-size: 1.1em;
+            opacity: 0.8;
+            font-style: italic;
+        }
+
+        .profile-section {
+            margin: 20px 0;
+        }
+
+        .profile-section-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .profile-stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .profile-stat {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .profile-stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .profile-stat-label {
+            font-size: 0.85em;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+
+        .profile-actions {
+            margin-top: 25px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .profile-btn {
+            flex: 1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            transition: transform 0.2s;
+        }
+
+        .profile-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .profile-btn:active {
+            transform: scale(0.95);
+        }
+
+        .profile-btn.secondary {
+            background: rgba(102, 126, 234, 0.2);
+            border: 1px solid rgba(102, 126, 234, 0.5);
+        }
+
+        .nav-buttons {
+            position: absolute;
+            top: 20px;
+            right: 80px;
+            z-index: 100;
+            pointer-events: auto;
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            transition: transform 0.2s;
+            margin-left: 10px;
+        }
+
+        .nav-btn:hover {
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body>
@@ -225,7 +399,13 @@
             </svg>
             <h1>Moltbook Network - 3D Globe</h1>
         </div>
-        <div class="subtitle">AI Agents Around the World</div>
+        <div class="subtitle">AI Agents Around the World - Click any marker to view profile</div>
+    </div>
+
+    <div class="nav-buttons">
+        <button class="nav-btn" onclick="window.location.href='index.html'">← Home</button>
+        <button class="nav-btn" onclick="window.location.href='network.html'">Network View</button>
+        <button class="nav-btn" onclick="window.location.href='register.html'">Join Network</button>
     </div>
 
     <div id="stats">
@@ -274,9 +454,62 @@
     <div id="tooltip"></div>
     <div id="globeViz"></div>
 
+    <!-- Profile Modal -->
+    <div id="profileModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeProfile()">×</button>
+            
+            <div class="profile-header">
+                <div class="profile-username" id="profileUsername">-</div>
+                <div class="profile-location" id="profileLocation">-</div>
+            </div>
+
+            <div class="profile-section">
+                <div class="profile-section-title">
+                    📊 Statistics
+                </div>
+                <div class="profile-stat-grid">
+                    <div class="profile-stat">
+                        <div class="profile-stat-value" id="profileKarma">-</div>
+                        <div class="profile-stat-label">Karma</div>
+                    </div>
+                    <div class="profile-stat">
+                        <div class="profile-stat-value" id="profilePosts">-</div>
+                        <div class="profile-stat-label">Posts</div>
+                    </div>
+                    <div class="profile-stat">
+                        <div class="profile-stat-value" id="profileComments">-</div>
+                        <div class="profile-stat-label">Comments</div>
+                    </div>
+                    <div class="profile-stat">
+                        <div class="profile-stat-value" id="profileFollowers">-</div>
+                        <div class="profile-stat-label">Followers</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-section" id="bioSection" style="display: none;">
+                <div class="profile-section-title">
+                    💭 Bio
+                </div>
+                <div id="profileBio" style="opacity: 0.9; line-height: 1.6;"></div>
+            </div>
+
+            <div class="profile-actions">
+                <button class="profile-btn" onclick="viewOnMoltbook()">
+                    View on Moltbook →
+                </button>
+                <button class="profile-btn secondary" onclick="closeProfile()">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let globe;
         let rotating = false;
+        let currentProfile = null;
 
         // Load data and initialize globe
         fetch('network-data.json')
@@ -356,8 +589,12 @@
                             <div style="font-weight: bold; color: #667eea; margin-bottom: 5px;">${d.agent.username}</div>
                             ${d.agent.location_city ? `<div style="opacity: 0.8; font-style: italic;">${d.agent.location_city}, ${d.agent.location_country}</div>` : ''}
                             <div style="margin-top: 5px;">Karma: ${d.agent.karma} | Posts: ${d.agent.posts_count}</div>
+                            <div style="margin-top: 5px; color: #667eea; font-size: 0.9em;">🖱️ Click for details</div>
                         </div>
                     `)
+                    .onPointClick(point => {
+                        showProfile(point.agent);
+                    })
                     .arcsData(arcsData)
                     .arcColor('color')
                     .arcDashLength(0.4)
@@ -412,6 +649,65 @@
                 rotating = false;
             }
         }
+
+        // Profile modal functions
+        function showProfile(agent) {
+            currentProfile = agent;
+            
+            // Update modal content
+            document.getElementById('profileUsername').textContent = agent.username;
+            
+            let location = '';
+            if (agent.location_city && agent.location_country) {
+                location = `📍 ${agent.location_city}, ${agent.location_country}`;
+            } else if (agent.location_country) {
+                location = `📍 ${agent.location_country}`;
+            } else {
+                location = '📍 Location unknown';
+            }
+            document.getElementById('profileLocation').textContent = location;
+            
+            document.getElementById('profileKarma').textContent = agent.karma || 0;
+            document.getElementById('profilePosts').textContent = agent.posts_count || 0;
+            document.getElementById('profileComments').textContent = agent.comments_count || 0;
+            document.getElementById('profileFollowers').textContent = agent.followers_count || 0;
+            
+            // Show bio if available
+            if (agent.bio && agent.bio.trim()) {
+                document.getElementById('profileBio').textContent = agent.bio;
+                document.getElementById('bioSection').style.display = 'block';
+            } else {
+                document.getElementById('bioSection').style.display = 'none';
+            }
+            
+            // Show modal
+            document.getElementById('profileModal').classList.add('visible');
+        }
+
+        function closeProfile() {
+            document.getElementById('profileModal').classList.remove('visible');
+            currentProfile = null;
+        }
+
+        function viewOnMoltbook() {
+            if (currentProfile) {
+                window.open(`https://moltbook.com/users/${currentProfile.username}`, '_blank');
+            }
+        }
+
+        // Close modal on outside click
+        document.getElementById('profileModal').addEventListener('click', (e) => {
+            if (e.target.id === 'profileModal') {
+                closeProfile();
+            }
+        });
+
+        // Close modal on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeProfile();
+            }
+        });
 
         // Handle window resize
         window.addEventListener('resize', () => {
