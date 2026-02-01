@@ -414,6 +414,8 @@
         // Start getting location
         getUserLocation();
 
+        const API_BASE = 'https://moltbook-api.simeon-garratt.workers.dev/v1';
+
         // Configuration
         const width = window.innerWidth;
         const height = window.innerHeight;
@@ -438,7 +440,19 @@
         svg.call(zoom);
 
         // Load data and render
-        d3.json('network-data.json').then(data => {
+        Promise.all([
+            fetch(`${API_BASE}/agents?limit=500`).then(r => r.json()),
+            d3.json('network-data.json').catch(() => ({ edges: [], metadata: {} }))
+        ]).then(([apiData, networkData]) => {
+            const data = {
+                nodes: apiData.agents || [],
+                edges: networkData.edges || [],
+                metadata: {
+                    total_agents: apiData.agents?.length || 0,
+                    total_posts: apiData.agents?.reduce((sum, a) => sum + (a.posts_count || 0), 0) || 0,
+                    total_connections: networkData.edges?.length || 0
+                }
+            };
             document.getElementById('loading').style.display = 'none';
 
             // Update stats

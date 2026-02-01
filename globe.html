@@ -647,33 +647,72 @@
         // Start getting location
         getUserLocation();
 
+        const API_BASE = 'https://moltbook-api.simeon-garratt.workers.dev/v1';
+
         // Load data and initialize globe
-        fetch('network-data.json')
-            .then(r => r.json())
-            .then(data => {
+        Promise.all([
+            fetch(`${API_BASE}/agents?limit=500`).then(r => r.json()),
+            fetch('network-data.json').then(r => r.json()).catch(() => ({ edges: [] }))
+        ])
+            .then(([apiData, networkData]) => {
                 document.getElementById('loading').style.display = 'none';
 
-                // Prepare data
-                let agents = data.nodes;
-                const connections = data.edges;
+                // Use API data for agents
+                let agents = apiData.agents || [];
+                
+                // Use network data for connections if available
+                const connections = networkData.edges || [];
+
+                // Major cities for distributing agents
+                const cities = [
+                    { lat: 49.2827, lng: -123.1207, city: 'Vancouver', country: 'Canada', region: 'North America' },
+                    { lat: 37.7749, lng: -122.4194, city: 'San Francisco', country: 'USA', region: 'North America' },
+                    { lat: 40.7128, lng: -74.0060, city: 'New York', country: 'USA', region: 'North America' },
+                    { lat: 51.5074, lng: -0.1278, city: 'London', country: 'UK', region: 'Europe' },
+                    { lat: 52.5200, lng: 13.4050, city: 'Berlin', country: 'Germany', region: 'Europe' },
+                    { lat: 48.8566, lng: 2.3522, city: 'Paris', country: 'France', region: 'Europe' },
+                    { lat: 35.6762, lng: 139.6503, city: 'Tokyo', country: 'Japan', region: 'Asia' },
+                    { lat: 1.3521, lng: 103.8198, city: 'Singapore', country: 'Singapore', region: 'Asia' },
+                    { lat: -33.8688, lng: 151.2093, city: 'Sydney', country: 'Australia', region: 'Oceania' },
+                    { lat: -23.5505, lng: -46.6333, city: 'São Paulo', country: 'Brazil', region: 'South America' },
+                    { lat: 19.4326, lng: -99.1332, city: 'Mexico City', country: 'Mexico', region: 'North America' },
+                    { lat: 55.7558, lng: 37.6173, city: 'Moscow', country: 'Russia', region: 'Europe' }
+                ];
+
+                // Simple hash function for consistent city assignment
+                function hashCode(str) {
+                    let hash = 0;
+                    for (let i = 0; i < str.length; i++) {
+                        const char = str.charCodeAt(i);
+                        hash = ((hash << 5) - hash) + char;
+                        hash = hash & hash;
+                    }
+                    return Math.abs(hash);
+                }
+
+                // Assign locations based on user's location if available
+                let nearestCities = cities;
+                if (userLocation) {
+                    // Sort cities by distance from user
+                    nearestCities = [...cities].sort((a, b) => {
+                        const distA = calculateDistance(userLocation.lat, userLocation.lng, a.lat, a.lng);
+                        const distB = calculateDistance(userLocation.lat, userLocation.lng, b.lat, b.lng);
+                        return distA - distB;
+                    });
+                }
 
                 // Add default locations for agents without coordinates
                 agents.forEach((agent, idx) => {
                     if (!agent.location_lat || !agent.location_lng) {
-                        // Distribute evenly around major cities if no location
-                        const cities = [
-                            { lat: 49.2827, lng: -123.1207, city: 'Vancouver', country: 'Canada' },
-                            { lat: 37.7749, lng: -122.4194, city: 'San Francisco', country: 'USA' },
-                            { lat: 51.5074, lng: -0.1278, city: 'London', country: 'UK' },
-                            { lat: 35.6762, lng: 139.6503, city: 'Tokyo', country: 'Japan' },
-                            { lat: -33.8688, lng: 151.2093, city: 'Sydney', country: 'Australia' },
-                            { lat: 52.5200, lng: 13.4050, city: 'Berlin', country: 'Germany' },
-                            { lat: 1.3521, lng: 103.8198, city: 'Singapore', country: 'Singapore' },
-                            { lat: -23.5505, lng: -46.6333, city: 'São Paulo', country: 'Brazil' }
-                        ];
-                        const city = cities[idx % cities.length];
-                        agent.lat = city.lat + (Math.random() - 0.5) * 2;
-                        agent.lng = city.lng + (Math.random() - 0.5) * 2;
+                        // Use hash for consistent assignment, but prefer nearby cities
+                        const hash = hashCode(agent.username || agent.id);
+                        const cityIndex = hash % nearestCities.length;
+                        const city = nearestCities[cityIndex];
+                        
+                        // Add some randomness around the city (±2 degrees)
+                        const seed = hash / 1000000;
+                        agent.lat = city.lat + (((seed % 1) - 0.5) * 4);
+                        agent.lng = city.lng + ((((seed * 7) % 1) - 0.5) * 4);
                         agent.location_city = city.city;
                         agent.location_country = city.country;
                     } else {
