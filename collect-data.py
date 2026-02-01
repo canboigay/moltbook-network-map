@@ -55,6 +55,39 @@ def fetch_all_posts(api_key, limit=100):
     print(f"✓ Total posts fetched: {len(all_posts)}")
     return all_posts
 
+def fetch_all_agents(api_key):
+    """Fetch all registered agents"""
+    headers = {"Authorization": f"Bearer {api_key}"}
+    all_agents = []
+    offset = 0
+    limit = 100
+    
+    print("Fetching all agents...")
+    while True:
+        try:
+            response = requests.get(f"{API_BASE}/agents?limit={limit}&offset={offset}", headers=headers)
+            response.raise_for_status()
+            data = response.json()
+            
+            agents = data.get('agents', [])
+            if not agents:
+                break
+            
+            all_agents.extend(agents)
+            print(f"  Fetched {len(all_agents)} agents...")
+            
+            if len(agents) < limit:
+                break
+            
+            offset += limit
+                
+        except Exception as e:
+            print(f"Error fetching agents: {e}")
+            break
+    
+    print(f"✓ Total agents fetched: {len(all_agents)}")
+    return all_agents
+
 def fetch_submolts(api_key):
     """Fetch all submolts"""
     headers = {"Authorization": f"Bearer {api_key}"}
@@ -69,29 +102,30 @@ def fetch_submolts(api_key):
         print(f"Error fetching submolts: {e}")
         return []
 
-def build_network_graph(posts):
-    """Build network graph from posts data"""
+def build_network_graph(agents, posts):
+    """Build network graph from agents and posts data"""
     nodes = {}  # agent_id -> {username, karma, posts_count}
     edges = []  # {source, target, weight, type}
     
     print("\nBuilding network graph...")
     
-    # Build nodes from post authors
+    # Build nodes from ALL agents (not just those who posted)
+    for agent in agents:
+        nodes[agent['id']] = {
+            'id': agent['id'],
+            'username': agent['username'],
+            'posts_count': agent.get('posts_count', 0),
+            'karma': agent.get('karma', 0),
+            'comments_made': 0,
+            'verified': agent.get('verified', False)
+        }
+    
+    # Update nodes with post data (in case agent list is stale)
     for post in posts:
         author_id = post['author']['id']
-        author_name = post['author']['username']
-        
-        if author_id not in nodes:
-            nodes[author_id] = {
-                'id': author_id,
-                'username': author_name,
-                'posts_count': 0,
-                'karma': 0,
-                'comments_made': 0
-            }
-        
-        nodes[author_id]['posts_count'] += 1
-        nodes[author_id]['karma'] += post.get('upvotes', 0)
+        if author_id in nodes:
+            # Post count already in agent data, just ensure it's accurate
+            nodes[author_id]['karma'] = max(nodes[author_id]['karma'], post.get('upvotes', 0))
     
     # Build edges (we'd need comments/upvotes data for full network)
     # For now, let's create edges based on submolt co-occurrence
@@ -141,11 +175,12 @@ def main():
     api_key = get_api_key()
     
     # Fetch data
+    agents = fetch_all_agents(api_key)
     posts = fetch_all_posts(api_key)
     submolts = fetch_submolts(api_key)
     
     # Build graph
-    graph = build_network_graph(posts)
+    graph = build_network_graph(agents, posts)
     
     # Add submolts to metadata
     graph['metadata']['submolts'] = submolts
