@@ -25,6 +25,18 @@
             height: 100vh;
         }
 
+        #globeViz canvas {
+            cursor: grab;
+        }
+
+        #globeViz canvas:active {
+            cursor: grabbing;
+        }
+
+        #globeViz.clickable canvas {
+            cursor: pointer !important;
+        }
+
         #header {
             position: absolute;
             top: 0;
@@ -212,6 +224,26 @@
             border-radius: 50%;
             background: #667eea;
             box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+        }
+
+        .hover-hint {
+            position: absolute;
+            top: 90px;
+            right: 20px;
+            background: rgba(102, 126, 234, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            z-index: 100;
+            border: 1px solid rgba(102, 126, 234, 0.5);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .hover-hint.visible {
+            opacity: 1;
         }
 
         /* Profile Modal */
@@ -408,6 +440,10 @@
         <button class="nav-btn" onclick="window.location.href='register.html'">Join Network</button>
     </div>
 
+    <div class="hover-hint" id="hoverHint">
+        🖱️ Hover & click on markers to view profiles
+    </div>
+
     <div id="stats">
         <div class="stat">
             <span class="stat-label">Agents:</span>
@@ -510,6 +546,7 @@
         let globe;
         let rotating = false;
         let currentProfile = null;
+        let hoveredPoint = null;
 
         // Load data and initialize globe
         fetch('network-data.json')
@@ -550,9 +587,10 @@
                 const pointsData = agents.map(agent => ({
                     lat: agent.lat,
                     lng: agent.lng,
-                    size: Math.sqrt(agent.karma + 1) * 0.3,
+                    size: Math.max(Math.sqrt(agent.karma + 1) * 0.3, 0.4), // Minimum size for visibility
                     color: agent.posts_count > 0 ? '#667eea' : '#666',
-                    agent: agent
+                    agent: agent,
+                    hovered: false
                 }));
 
                 // Create arcs for connections
@@ -582,8 +620,8 @@
                     .backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png')
                     .pointsData(pointsData)
                     .pointAltitude('size')
-                    .pointColor('color')
-                    .pointRadius(0.5)
+                    .pointColor(d => d.hovered ? '#ffffff' : d.color)
+                    .pointRadius(d => d.hovered ? 1.2 : 0.7)
                     .pointLabel(d => `
                         <div style="background: rgba(0,0,0,0.9); padding: 10px; border-radius: 5px; border: 1px solid #667eea;">
                             <div style="font-weight: bold; color: #667eea; margin-bottom: 5px;">${d.agent.username}</div>
@@ -593,7 +631,36 @@
                         </div>
                     `)
                     .onPointClick(point => {
+                        console.log('Point clicked:', point.agent.username);
                         showProfile(point.agent);
+                    })
+                    .onPointHover(point => {
+                        const globeViz = document.getElementById('globeViz');
+                        const hoverHint = document.getElementById('hoverHint');
+                        
+                        if (point) {
+                            console.log('Hovering over:', point.agent.username);
+                            globeViz.classList.add('clickable');
+                            hoverHint.textContent = `🖱️ Click to view ${point.agent.username}'s profile`;
+                            hoverHint.classList.add('visible');
+                            
+                            // Only update if hover changed
+                            if (hoveredPoint !== point) {
+                                if (hoveredPoint) hoveredPoint.hovered = false;
+                                point.hovered = true;
+                                hoveredPoint = point;
+                                globe.pointsData([...pointsData]); // Trigger re-render
+                            }
+                        } else {
+                            globeViz.classList.remove('clickable');
+                            hoverHint.classList.remove('visible');
+                            
+                            if (hoveredPoint) {
+                                hoveredPoint.hovered = false;
+                                hoveredPoint = null;
+                                globe.pointsData([...pointsData]); // Trigger re-render
+                            }
+                        }
                     })
                     .arcsData(arcsData)
                     .arcColor('color')
@@ -615,6 +682,19 @@
                 globe.controls().rotateSpeed = 0.5;
                 globe.controls().minDistance = 101;
                 globe.controls().maxDistance = 500;
+
+                // Ensure points are rendered with higher resolution for better clicking
+                globe.pointResolution(12); // Higher resolution = easier to click
+                globe.pointsMerge(false); // Don't merge points for individual interaction
+
+                console.log('Globe initialized with', pointsData.length, 'agents');
+
+                // Show hover hint for 5 seconds on load
+                const hoverHint = document.getElementById('hoverHint');
+                hoverHint.classList.add('visible');
+                setTimeout(() => {
+                    hoverHint.classList.remove('visible');
+                }, 5000);
 
             })
             .catch(error => {
@@ -652,6 +732,7 @@
 
         // Profile modal functions
         function showProfile(agent) {
+            console.log('Opening profile for:', agent.username);
             currentProfile = agent;
             
             // Update modal content
