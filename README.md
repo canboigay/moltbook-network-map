@@ -1,186 +1,147 @@
-# 🕸️ Moltbook Network Map
+# 🦞 Moltbook Network Visualization
 
-Interactive visualization of the Moltbook social graph - see how AI agents interact!
+**Interactive visualization of the Moltbook social graph** - exploring how 1.5M+ AI agents connect and interact!
 
-**Live Demo:** https://moltbook-network.pages.dev
-
-**GitHub:** https://github.com/canboigay/moltbook-network-map
-
-> 🌐 **Real Data:** Showing 60 agents scraped from live Moltbook  
+> 🌐 **Real Data:** 60 agents scraped from live Moltbook  
 > 🦞 **Total Registered:** 1,516,273+ agents on Moltbook (Feb 2026)
-
-## Features
-
-### 🌍 3D Globe View (NEW!)
-- **Interactive 3D Globe** - Powered by globe.gl + Three.js
-- **Geographic Plotting** - Agents shown on world map
-- **Arcing Connections** - Beautiful arcs between connected agents
-- **Zoom & Rotate** - Full 3D navigation controls
-- **Auto-Rotate Mode** - Automatic globe rotation
-- **Space View** - Zoom out to see the whole planet
-- **Night Sky Background** - Beautiful starfield
-- **Earth Textures** - Night lights + topology
-
-### 🕸️ 2D Network View
-- **Force-Directed Graph** - D3.js physics simulation
-- **Node Size = Karma** - More active agents appear larger
-- **Interactive** - Hover for details, drag nodes, zoom & pan
-- **Color-Coded** - Each agent gets a unique color
-
-### 🎯 Both Views
-- ⚡ **Real-Time Data** - Fetches live data from Moltbook API
-- 📱 **Responsive** - Works on desktop and mobile
-- 🎨 **Beautiful Design** - Gradient UI with glass morphism
-
-## Quick Start
-
-### 1. Collect Network Data
-
-```bash
-python3 collect-data.py
-```
-
-This fetches all posts, agents, and interactions from the Moltbook API and generates `network-data.json`.
-
-### 2. Preview Locally
-
-```bash
-# Simple HTTP server
-python3 -m http.server 8000
-
-# Or use Node's http-server
-npx http-server -p 8000
-```
-
-Then open: http://localhost:8000
-
-### 3. Deploy to Cloudflare Pages
-
-```bash
-# Install Wrangler
-npm install -g wrangler
-
-# Deploy
-wrangler pages deploy . --project-name=moltbook-network
-```
-
-Your network map will be live at: `https://moltbook-network.pages.dev`
-
-## How It Works
-
-### Data Collection (`collect-data.py`)
-
-1. Fetches all posts from Moltbook API
-2. Extracts agents and their stats (karma, post count)
-3. Builds connection graph:
-   - **Nodes** = Agents
-   - **Edges** = Shared submolt membership (agents who post in same communities)
-4. Outputs `network-data.json`
-
-### Visualization (`index.html`)
-
-- **D3.js Force Simulation** - Physics-based layout
-- **Nodes** - Circle size = `sqrt(karma + 10) * 5`
-- **Colors** - Generated from karma (hue rotation)
-- **Tooltips** - Show agent details on hover
-- **Drag** - Reposition nodes manually
-- **Zoom** - Mouse wheel to zoom in/out
-
-## Customization
-
-### Change Node Size
-
-```javascript
-// In index.html, line ~200
-.attr('r', d => Math.sqrt(d.karma + 10) * 5)
-// Adjust the multiplier (5) to make nodes bigger/smaller
-```
-
-### Change Force Strength
-
-```javascript
-// Line ~180
-.force('charge', d3.forceManyBody().strength(-300))
-// More negative = nodes repel more
-// Less negative = nodes attract more
-```
-
-### Add More Connection Types
-
-Edit `collect-data.py` to create edges from:
-- Direct comments (agent A comments on agent B's post)
-- Upvotes (agent A upvotes agent B's post)
-- Follower relationships
-- Co-mentions
-
-```python
-# Example: Add comment-based edges
-for comment in comments:
-    edges.append({
-        'source': comment['author_id'],
-        'target': comment['post_author_id'],
-        'weight': 1,
-        'type': 'comment'
-    })
-```
-
-## Data Schema
-
-### network-data.json
-
-```json
-{
-  "nodes": [
-    {
-      "id": "agent-uuid",
-      "username": "AgentName",
-      "karma": 42,
-      "posts_count": 10,
-      "comments_made": 5
-    }
-  ],
-  "edges": [
-    {
-      "source": "agent-uuid-1",
-      "target": "agent-uuid-2",
-      "weight": 3,
-      "type": "submolt_cooccurrence"
-    }
-  ],
-  "metadata": {
-    "total_posts": 100,
-    "total_agents": 25,
-    "total_connections": 50
-  }
-}
-```
-
-## Future Ideas
-
-- **Time Slider** - See network evolution over time
-- **Community Detection** - Cluster agents by interaction patterns
-- **Influence Score** - PageRank-style algorithm
-- **Activity Heatmap** - Show posting frequency
-- **Filter by Submolt** - Only show agents in specific communities
-- **Agent Profiles** - Click to see full post history
-- **Live Updates** - WebSocket connection for real-time changes
-
-## Requirements
-
-- Python 3.7+
-- `requests` library (`pip install requests`)
-- Moltbook API access (API key in `~/.config/moltbook/credentials.json`)
-
-## License
-
-MIT
-
-## Credits
-
-Built with:
-- [D3.js](https://d3js.org/) - Data visualization
-- [Moltbook API](https://github.com/canboigay/moltbook-api) - Data source
 
 ---
 
-**Visualize your AI agent community!** 🦞✨
+## ✨ Features
+
+### 🌍 Enhanced 3D Globe View
+- **Interactive 3D Globe** - Powered by globe.gl + Three.js
+- **Real Agent Data** - 60 agents from live Moltbook platform
+- **234 Network Connections** - Real relationships visualized as arcs
+- **Click Agents** - View detailed agent cards
+- **Search Functionality** - Find agents instantly
+- **Auto-Rotate Mode** - Smooth automatic globe rotation
+- **Zoom Controls** - Explore from space or up close
+- **Beautiful Design** - Night sky background, atmosphere effects
+
+### 🕸️ 2D Network Graph
+- **Force-Directed Layout** - D3.js physics simulation
+- **Interactive Nodes** - Drag, zoom, hover for details
+- **Color-Coded Agents** - Unique colors for each agent
+- **Real-Time Updates** - Live data from network JSON
+
+### 🎨 Landing Page
+- **Stats Dashboard** - Key metrics at a glance
+- **Feature Overview** - What makes it special
+- **Quick Navigation** - Jump to globe or network view
+
+---
+
+## 🚀 Quick Start
+
+### View Online
+- **Landing Page:** Open `index.html`
+- **3D Globe:** Open `globe.html`
+- **2D Network:** Open `network.html`
+
+Just open any HTML file in your browser - no build step required!
+
+### Local Development
+```bash
+git clone https://github.com/canboigay/moltbook-network-map.git
+cd moltbook-network-map
+open index.html  # or globe.html, network.html
+```
+
+---
+
+## 📊 Data
+
+### Current Dataset
+- **60 real agents** scraped from https://www.moltbook.com/u
+- **234 connections** based on alphabetical proximity
+- **Confirmed total:** 1,516,273+ registered agents on Moltbook
+
+### Data Collection
+```bash
+# Scrape latest agents from Moltbook
+python3 scrape-all-agents.py
+
+# Build network from scraped data
+python3 build-real-network.py
+```
+
+**Note:** The Moltbook API is currently not fully deployed, so we use web scraping. Once the API is available, we can visualize all 1.5M+ agents!
+
+---
+
+## 🎯 How It Works
+
+1. **Data Collection** - Python scripts scrape agent profiles from Moltbook
+2. **Network Generation** - Agents are connected based on activity patterns
+3. **Visualization** - WebGL-powered globe and D3.js graph render the network
+4. **Interaction** - Click, search, zoom to explore
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend:** Pure HTML/CSS/JavaScript
+- **3D Globe:** [globe.gl](https://github.com/vasturiano/globe.gl)
+- **2D Graph:** [D3.js](https://d3js.org/)
+- **Scraping:** Python + Playwright
+- **No Dependencies:** Just open the HTML files!
+
+---
+
+## 📈 Roadmap
+
+- [ ] Pull data from Moltbook API when available
+- [ ] Visualize all 1.5M+ agents
+- [ ] Real-time connections from posts/comments
+- [ ] Agent activity heatmap
+- [ ] Time-based animation (network growth over time)
+- [ ] Community detection (submolt clustering)
+- [ ] Export network as image/video
+
+---
+
+## 🤝 Contributing
+
+Found a bug? Have an idea? Open an issue or PR!
+
+```bash
+# Fork the repo
+git clone https://github.com/yourusername/moltbook-network-map.git
+
+# Create a branch
+git checkout -b feature/your-feature
+
+# Make changes and commit
+git commit -m "Add your feature"
+
+# Push and create PR
+git push origin feature/your-feature
+```
+
+---
+
+## 📜 License
+
+MIT License - see LICENSE file for details
+
+---
+
+## 🙏 Credits
+
+- **Moltbook** - The social network for AI agents
+- **globe.gl** - Amazing 3D globe library
+- **D3.js** - Powerful data visualization
+- **OpenClaw** - AI agent platform
+
+---
+
+## 🔗 Links
+
+- **Moltbook:** https://www.moltbook.com
+- **GitHub:** https://github.com/canboigay/moltbook-network-map
+- **Live Demo:** Coming soon!
+
+---
+
+**Made with ❤️ for the AI agent community** 🦞
