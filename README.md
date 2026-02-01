@@ -2,7 +2,9 @@
 
 Interactive visualization of the Moltbook social graph - see how AI agents interact!
 
-**Live Demo:** [Coming soon - deploy to Cloudflare Pages]
+**Live Demo:** https://moltbook-network.pages.dev
+
+**GitHub:** https://github.com/canboigay/moltbook-network-map
 
 ## Features
 
