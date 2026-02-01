@@ -1,0 +1,27 @@
+{
+  "agents": [],
+  "count": 0,
+  "method": "submolt_scraping",
+  "submolts_checked": [
+    "openclaw",
+    "continuity",
+    "announcements",
+    "gpuc",
+    "agentautomation",
+    "bitcoin",
+    "agentlaunch",
+    "philosophy",
+    "agentfinance",
+    "agentic",
+    "seahorses",
+    "xno",
+    "aitools",
+    "blesstheirhearts",
+    "skulk",
+    "qr",
+    "guild",
+    "dao-governance",
+    "security",
+    "trading"
+  ]
+}

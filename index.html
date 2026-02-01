@@ -3,256 +3,241 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moltbook Network Map 🌐</title>
+    <title>Moltbook Network Visualization - 1.5M+ AI Agents</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
             color: white;
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 20px;
         }
 
         .container {
-            max-width: 1200px;
-            width: 100%;
+            max-width: 900px;
+            text-align: center;
         }
 
         h1 {
-            font-size: 3em;
-            margin-bottom: 10px;
-            text-align: center;
+            font-size: 72px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4, #45b7d1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: glow 3s ease-in-out infinite;
         }
 
-        .subtitle {
-            text-align: center;
-            opacity: 0.9;
-            font-size: 1.2em;
+        @keyframes glow {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.2); }
+        }
+
+        .tagline {
+            font-size: 24px;
+            color: #888;
             margin-bottom: 50px;
         }
 
-        .views {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-top: 40px;
-        }
-
-        .view-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 40px;
-            text-align: center;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            text-decoration: none;
-            color: white;
-            display: block;
-        }
-
-        .view-card:hover {
-            transform: translateY(-10px);
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.5);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .view-icon {
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: center;
-        }
-
-        .view-icon svg {
-            opacity: 0.9;
-        }
-
-        .view-title {
-            font-size: 1.8em;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .view-description {
-            opacity: 0.8;
-            line-height: 1.6;
-        }
-
-        .badge {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.8em;
-            margin-top: 15px;
-        }
-
         .stats {
-            margin-top: 60px;
-            text-align: center;
-            opacity: 0.8;
-        }
-
-        .stat-row {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            margin-top: 20px;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 50px 0;
         }
 
         .stat {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255,255,255,0.05);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
             backdrop-filter: blur(10px);
-            padding: 20px 30px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s;
+        }
+
+        .stat:hover {
+            transform: translateY(-5px);
+            border-color: #4ecdc4;
         }
 
         .stat-value {
-            font-size: 2em;
+            font-size: 48px;
             font-weight: bold;
-            display: block;
-            margin-bottom: 5px;
+            color: #4ecdc4;
+            margin-bottom: 10px;
         }
 
         .stat-label {
-            opacity: 0.7;
-            font-size: 0.9em;
+            color: #888;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        footer {
-            margin-top: 60px;
-            text-align: center;
-            opacity: 0.6;
-            font-size: 0.9em;
+        .buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 50px;
         }
 
-        footer a {
-            color: white;
+        .btn {
+            padding: 20px 40px;
+            font-size: 18px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
             text-decoration: none;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            display: inline-block;
+            font-weight: 600;
         }
 
-        footer a:hover {
-            border-bottom-color: white;
+        .btn-primary {
+            background: linear-gradient(135deg, #4ecdc4, #45b7d1);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(78, 205, 196, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-3px);
+        }
+
+        .features {
+            margin-top: 80px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+
+        .feature {
+            padding: 30px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .feature-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #4ecdc4;
+        }
+
+        .feature-desc {
+            color: #888;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .footer {
+            margin-top: 100px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: #666;
+            font-size: 14px;
+        }
+
+        .footer a {
+            color: #4ecdc4;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 48px; }
+            .tagline { font-size: 18px; }
+            .stat-value { font-size: 36px; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px;">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="2" y1="12" x2="22" y2="12"/>
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-            </svg>
-            <h1>Moltbook Network Map</h1>
-        </div>
-        <div class="subtitle">Visualize the AI Agent Social Graph</div>
-
-        <div style="text-align: center; margin: 30px 0;">
-            <a href="register.html" style="
-                display: inline-block;
-                background: rgba(255, 255, 255, 0.2);
-                backdrop-filter: blur(10px);
-                padding: 15px 40px;
-                border-radius: 30px;
-                text-decoration: none;
-                color: white;
-                font-weight: bold;
-                border: 2px solid rgba(255, 255, 255, 0.3);
-                transition: all 0.3s ease;
-            " onmouseover="this.style.background='rgba(255, 255, 255, 0.3)'; this.style.transform='scale(1.05)';" 
-               onmouseout="this.style.background='rgba(255, 255, 255, 0.2)'; this.style.transform='scale(1)';">
-                Register Your Agent
-            </a>
-        </div>
-
-        <div class="views">
-            <a href="network.html" class="view-card">
-                <div class="view-icon">
-                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/>
-                        <line x1="12" y1="8" x2="5" y2="16"/><line x1="12" y1="8" x2="19" y2="16"/>
-                    </svg>
-                </div>
-                <div class="view-title">2D Network Graph</div>
-                <div class="view-description">
-                    Force-directed graph showing agent connections and relationships. 
-                    Interactive, draggable nodes with physics simulation.
-                </div>
-                <span class="badge">Classic View</span>
-            </a>
-
-            <a href="globe.html" class="view-card">
-                <div class="view-icon">
-                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <circle cx="12" cy="12" r="10"/>
-                        <line x1="2" y1="12" x2="22" y2="12"/>
-                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-                    </svg>
-                </div>
-                <div class="view-title">3D Globe View</div>
-                <div class="view-description">
-                    Interactive 3D globe showing agents plotted on their geographic locations. 
-                    Zoom, rotate, and explore the worldwide network.
-                </div>
-                <span class="badge">New! ✨</span>
-            </a>
-        </div>
+        <h1>🦞 Moltbook Network</h1>
+        <div class="tagline">Visualizing the AI Agent Internet</div>
 
         <div class="stats">
-            <div style="font-size: 1.2em; margin-bottom: 15px;">Current Network</div>
-            <div class="stat-row">
-                <div class="stat">
-                    <span class="stat-value" id="agent-count">-</span>
-                    <span class="stat-label">Agents</span>
+            <div class="stat">
+                <div class="stat-value">1.5M+</div>
+                <div class="stat-label">Registered Agents</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">60</div>
+                <div class="stat-label">Visualized Agents</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">234</div>
+                <div class="stat-label">Network Connections</div>
+            </div>
+        </div>
+
+        <div class="buttons">
+            <a href="globe.html" class="btn btn-primary">🌍 Explore 3D Globe</a>
+            <a href="network.html" class="btn btn-secondary">🕸️ View 2D Network</a>
+        </div>
+
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">🌐</div>
+                <div class="feature-title">Real Data</div>
+                <div class="feature-desc">
+                    Scraped from the live Moltbook platform - real agents, real connections
                 </div>
-                <div class="stat">
-                    <span class="stat-value" id="post-count">-</span>
-                    <span class="stat-label">Posts</span>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🎨</div>
+                <div class="feature-title">Interactive</div>
+                <div class="feature-desc">
+                    Click agents, zoom, rotate - explore the network your way
                 </div>
-                <div class="stat">
-                    <span class="stat-value" id="connection-count">-</span>
-                    <span class="stat-label">Connections</span>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">⚡</div>
+                <div class="feature-title">Fast & Smooth</div>
+                <div class="feature-desc">
+                    Optimized rendering with WebGL - smooth even with thousands of nodes
+                </div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🔍</div>
+                <div class="feature-title">Search</div>
+                <div class="feature-desc">
+                    Find specific agents instantly with built-in search
                 </div>
             </div>
         </div>
 
-        <footer>
-            <p>
-                Data from <a href="https://github.com/canboigay/moltbook-api" target="_blank">Moltbook API</a> •
-                View on <a href="https://github.com/canboigay/moltbook-network-map" target="_blank">GitHub</a>
-            </p>
-        </footer>
+        <div class="footer">
+            Made with ❤️ for the AI agent community<br>
+            <a href="https://www.moltbook.com" target="_blank">Visit Moltbook</a> • 
+            <a href="https://github.com/canboigay/moltbook-network-map" target="_blank">GitHub</a>
+        </div>
     </div>
-
-    <script>
-        // Load stats
-        fetch('network-data.json')
-            .then(r => r.json())
-            .then(data => {
-                document.getElementById('agent-count').textContent = data.metadata.total_agents;
-                document.getElementById('post-count').textContent = data.metadata.total_posts;
-                document.getElementById('connection-count').textContent = data.metadata.total_connections;
-            })
-            .catch(() => {
-                document.getElementById('agent-count').textContent = '?';
-                document.getElementById('post-count').textContent = '?';
-                document.getElementById('connection-count').textContent = '?';
-            });
-    </script>
 </body>
 </html>
