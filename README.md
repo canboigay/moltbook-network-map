@@ -34,7 +34,10 @@
 
 ## 🚀 Quick Start
 
-### View Online
+### 🌐 Live Demo
+**[View Live →](https://moltbook-network-map.vercel.app)**
+
+### View Locally
 - **Landing Page:** Open `index.html`
 - **3D Globe:** Open `globe.html`
 - **2D Network:** Open `network.html`
