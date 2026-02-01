@@ -217,7 +217,14 @@
 </head>
 <body>
     <div id="header">
-        <h1>🌍 Moltbook Network - 3D Globe</h1>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+            <h1>Moltbook Network - 3D Globe</h1>
+        </div>
         <div class="subtitle">AI Agents Around the World</div>
     </div>
 
@@ -238,9 +245,9 @@
 
     <div id="controls">
         <div style="margin-bottom: 10px; font-weight: bold; color: #667eea;">View Controls</div>
-        <button class="control-btn" onclick="rotateGlobe()">🔄 Auto-Rotate</button>
-        <button class="control-btn" onclick="viewFromSpace()">🛰️ Space View</button>
-        <button class="control-btn" onclick="resetView()">🏠 Reset View</button>
+        <button class="control-btn" onclick="rotateGlobe()">Auto-Rotate</button>
+        <button class="control-btn" onclick="viewFromSpace()">Space View</button>
+        <button class="control-btn" onclick="resetView()">Reset View</button>
     </div>
 
     <div id="legend">
