@@ -20,20 +20,22 @@ def get_api_key():
         print(f"Error reading API key: {e}")
         sys.exit(1)
 
-def fetch_all_posts(api_key, limit=100):
+def fetch_all_posts(api_key, limit=20):
     """Fetch all posts from the main feed"""
     headers = {"Authorization": f"Bearer {api_key}"}
     all_posts = []
     cursor = None
+    max_pages = 20  # Limit to avoid infinite loops
+    pages = 0
     
     print("Fetching posts...")
-    while True:
+    while pages < max_pages:
         url = f"{API_BASE}/feed?limit={limit}"
         if cursor:
             url += f"&cursor={cursor}"
         
         try:
-            response = requests.get(url, headers=headers)
+            response = requests.get(url, headers=headers, timeout=10)
             response.raise_for_status()
             data = response.json()
             
@@ -42,14 +44,15 @@ def fetch_all_posts(api_key, limit=100):
                 break
             
             all_posts.extend(posts)
-            print(f"  Fetched {len(all_posts)} posts...")
+            pages += 1
+            print(f"  Page {pages}: {len(posts)} posts (total: {len(all_posts)})")
             
             cursor = data.get('pagination', {}).get('next')
             if not cursor:
                 break
                 
         except Exception as e:
-            print(f"Error fetching posts: {e}")
+            print(f"  Stopped at page {pages}: {e}")
             break
     
     print(f"✓ Total posts fetched: {len(all_posts)}")
@@ -127,18 +130,19 @@ def build_network_graph(agents, posts):
             # Post count already in agent data, just ensure it's accurate
             nodes[author_id]['karma'] = max(nodes[author_id]['karma'], post.get('upvotes', 0))
     
-    # Build edges (we'd need comments/upvotes data for full network)
-    # For now, let's create edges based on submolt co-occurrence
-    submolt_members = defaultdict(set)
+    # Build edges based on REAL post data
+    # Strategy: Connect agents who post in the same submolts
+    submolt_members = defaultdict(lambda: defaultdict(int))
     
     for post in posts:
         submolt = post.get('submolt', 'm/general')
         author_id = post['author']['id']
-        submolt_members[submolt].add(author_id)
+        submolt_members[submolt][author_id] += 1  # Track how many posts each agent made
     
     # Create edges between agents in same submolt
+    # Weight by number of shared posts in that submolt
     for submolt, members in submolt_members.items():
-        members_list = list(members)
+        members_list = list(members.keys())
         for i, agent1 in enumerate(members_list):
             for agent2 in members_list[i+1:]:
                 # Check if edge already exists
@@ -146,14 +150,20 @@ def build_network_graph(agents, posts):
                                (e['source'] == agent1 and e['target'] == agent2) or
                                (e['source'] == agent2 and e['target'] == agent1)), None)
                 
+                # Weight is based on activity level in shared submolt
+                weight = min(members[agent1], members[agent2])
+                
                 if existing:
-                    existing['weight'] += 1
+                    existing['weight'] += weight
+                    if submolt not in existing.get('submolts', []):
+                        existing.setdefault('submolts', []).append(submolt)
                 else:
                     edges.append({
                         'source': agent1,
                         'target': agent2,
-                        'weight': 1,
-                        'type': 'submolt_cooccurrence'
+                        'weight': weight,
+                        'type': 'submolt_activity',
+                        'submolts': [submolt]
                     })
     
     print(f"✓ Created {len(nodes)} nodes and {len(edges)} edges")
