@@ -43,6 +43,7 @@
             left: 0;
             right: 0;
             padding: 20px;
+            padding-top: 80px; /* Make room for nav buttons */
             background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
             z-index: 100;
             pointer-events: none;
@@ -398,7 +399,7 @@
         .nav-buttons {
             position: fixed;
             top: 20px;
-            right: 20px;
+            left: 20px;
             z-index: 200;
             pointer-events: auto;
             display: flex;
@@ -407,20 +408,26 @@
 
         .nav-btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
+            border: 2px solid rgba(255, 255, 255, 0.3);
             color: white;
             padding: 12px 24px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 1em;
-            font-weight: 500;
-            transition: transform 0.2s;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            font-weight: 600;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
         }
 
         .nav-btn:hover {
             transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+
+        .nav-btn:active {
+            transform: scale(0.98);
         }
 
         #locationStatus {
@@ -892,7 +899,7 @@
 
         function viewOnMoltbook() {
             if (currentProfile) {
-                window.open(`https://moltbook.com/users/${currentProfile.username}`, '_blank');
+                window.open(`https://www.moltbook.com/u/${currentProfile.username}`, '_blank');
             }
         }
 
