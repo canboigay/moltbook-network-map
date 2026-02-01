@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moltbook Network Map 🕸️</title>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <title>Moltbook Network Map 🌐</title>
     <style>
         * {
             margin: 0;
@@ -16,374 +15,204 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            overflow: hidden;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
 
-        #header {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            z-index: 100;
+        .container {
+            max-width: 1200px;
+            width: 100%;
         }
 
         h1 {
-            font-size: 2em;
-            margin-bottom: 5px;
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-align: center;
         }
 
         .subtitle {
-            opacity: 0.8;
-            font-size: 0.9em;
+            text-align: center;
+            opacity: 0.9;
+            font-size: 1.2em;
+            margin-bottom: 50px;
         }
 
-        #stats {
-            position: absolute;
-            top: 100px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.5);
+        .views {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .view-card {
+            background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
-            padding: 15px 20px;
-            border-radius: 10px;
-            font-size: 0.9em;
-            z-index: 100;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            text-decoration: none;
+            color: white;
+            display: block;
+        }
+
+        .view-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .view-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .view-title {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .view-description {
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            margin-top: 15px;
+        }
+
+        .stats {
+            margin-top: 60px;
+            text-align: center;
+            opacity: 0.8;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 20px;
+            flex-wrap: wrap;
         }
 
         .stat {
-            margin: 8px 0;
-            display: flex;
-            justify-content: space-between;
-            gap: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px 30px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
         }
 
         .stat-label {
             opacity: 0.7;
+            font-size: 0.9em;
         }
 
-        .stat-value {
-            font-weight: bold;
+        footer {
+            margin-top: 60px;
+            text-align: center;
+            opacity: 0.6;
+            font-size: 0.9em;
         }
 
-        #visualization {
-            width: 100vw;
-            height: 100vh;
+        footer a {
+            color: white;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
         }
 
-        .node {
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .node:hover {
-            stroke: #fff;
-            stroke-width: 3px;
-        }
-
-        .link {
-            stroke: rgba(255, 255, 255, 0.2);
-            stroke-width: 1px;
-        }
-
-        .tooltip {
-            position: absolute;
-            padding: 12px 16px;
-            background: rgba(0, 0, 0, 0.9);
-            border-radius: 8px;
-            pointer-events: none;
-            font-size: 0.85em;
-            max-width: 250px;
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.2s;
-            backdrop-filter: blur(10px);
-        }
-
-        .tooltip.visible {
-            opacity: 1;
-        }
-
-        .tooltip-username {
-            font-weight: bold;
-            font-size: 1.1em;
-            margin-bottom: 8px;
-            color: #667eea;
-        }
-
-        .tooltip-stat {
-            margin: 4px 0;
-            display: flex;
-            justify-content: space-between;
-            gap: 15px;
-        }
-
-        .tooltip-label {
-            opacity: 0.7;
-        }
-
-        #legend {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px);
-            padding: 15px 20px;
-            border-radius: 10px;
-            font-size: 0.85em;
-            z-index: 100;
-        }
-
-        .legend-item {
-            margin: 8px 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .legend-circle {
-            width: 15px;
-            height: 15px;
-            border-radius: 50%;
-        }
-
-        #loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 1.5em;
-            z-index: 1000;
-        }
-
-        .spinner {
-            display: inline-block;
-            width: 50px;
-            height: 50px;
-            border: 5px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .node-label {
-            font-size: 11px;
-            fill: white;
-            text-anchor: middle;
-            pointer-events: none;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        footer a:hover {
+            border-bottom-color: white;
         }
     </style>
 </head>
 <body>
-    <div id="header">
-        <h1>🕸️ Moltbook Network Map</h1>
-        <div class="subtitle">Visualizing the AI Agent Social Graph</div>
+    <div class="container">
+        <h1>🌐 Moltbook Network Map</h1>
+        <div class="subtitle">Visualize the AI Agent Social Graph</div>
+
+        <div class="views">
+            <a href="index.html" class="view-card">
+                <span class="view-icon">🕸️</span>
+                <div class="view-title">2D Network Graph</div>
+                <div class="view-description">
+                    Force-directed graph showing agent connections and relationships. 
+                    Interactive, draggable nodes with physics simulation.
+                </div>
+                <span class="badge">Classic View</span>
+            </a>
+
+            <a href="globe.html" class="view-card">
+                <span class="view-icon">🌍</span>
+                <div class="view-title">3D Globe View</div>
+                <div class="view-description">
+                    Interactive 3D globe showing agents plotted on their geographic locations. 
+                    Zoom, rotate, and explore the worldwide network.
+                </div>
+                <span class="badge">New! ✨</span>
+            </a>
+        </div>
+
+        <div class="stats">
+            <div style="font-size: 1.2em; margin-bottom: 15px;">Current Network</div>
+            <div class="stat-row">
+                <div class="stat">
+                    <span class="stat-value" id="agent-count">-</span>
+                    <span class="stat-label">Agents</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="post-count">-</span>
+                    <span class="stat-label">Posts</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="connection-count">-</span>
+                    <span class="stat-label">Connections</span>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>
+                Data from <a href="https://github.com/canboigay/moltbook-api" target="_blank">Moltbook API</a> •
+                View on <a href="https://github.com/canboigay/moltbook-network-map" target="_blank">GitHub</a>
+            </p>
+        </footer>
     </div>
-
-    <div id="stats">
-        <div class="stat">
-            <span class="stat-label">Agents:</span>
-            <span class="stat-value" id="agent-count">-</span>
-        </div>
-        <div class="stat">
-            <span class="stat-label">Posts:</span>
-            <span class="stat-value" id="post-count">-</span>
-        </div>
-        <div class="stat">
-            <span class="stat-label">Connections:</span>
-            <span class="stat-value" id="connection-count">-</span>
-        </div>
-    </div>
-
-    <div id="legend">
-        <div style="margin-bottom: 10px; font-weight: bold;">Node Size</div>
-        <div class="legend-item">
-            <div class="legend-circle" style="background: #667eea; width: 25px; height: 25px;"></div>
-            <span>High Karma</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-circle" style="background: #667eea; width: 15px; height: 15px;"></div>
-            <span>Medium Karma</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-circle" style="background: #667eea; width: 8px; height: 8px;"></div>
-            <span>Low Karma</span>
-        </div>
-    </div>
-
-    <div id="loading">
-        <div class="spinner"></div>
-        <div style="margin-top: 15px;">Loading network data...</div>
-    </div>
-
-    <div class="tooltip" id="tooltip"></div>
-
-    <svg id="visualization"></svg>
 
     <script>
-        // Configuration
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-
-        // Create SVG
-        const svg = d3.select('#visualization')
-            .attr('width', width)
-            .attr('height', height);
-
-        const g = svg.append('g');
-
-        // Tooltip
-        const tooltip = d3.select('#tooltip');
-
-        // Add zoom behavior
-        const zoom = d3.zoom()
-            .scaleExtent([0.1, 10])
-            .on('zoom', (event) => {
-                g.attr('transform', event.transform);
+        // Load stats
+        fetch('network-data.json')
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('agent-count').textContent = data.metadata.total_agents;
+                document.getElementById('post-count').textContent = data.metadata.total_posts;
+                document.getElementById('connection-count').textContent = data.metadata.total_connections;
+            })
+            .catch(() => {
+                document.getElementById('agent-count').textContent = '?';
+                document.getElementById('post-count').textContent = '?';
+                document.getElementById('connection-count').textContent = '?';
             });
-
-        svg.call(zoom);
-
-        // Load data and render
-        d3.json('network-data.json').then(data => {
-            document.getElementById('loading').style.display = 'none';
-
-            // Update stats
-            document.getElementById('agent-count').textContent = data.metadata.total_agents;
-            document.getElementById('post-count').textContent = data.metadata.total_posts;
-            document.getElementById('connection-count').textContent = data.metadata.total_connections;
-
-            // Prepare data
-            const nodes = data.nodes.map(d => ({...d}));
-            const links = data.edges.map(d => ({...d}));
-
-            // Create force simulation
-            const simulation = d3.forceSimulation(nodes)
-                .force('link', d3.forceLink(links).id(d => d.id).distance(100))
-                .force('charge', d3.forceManyBody().strength(-300))
-                .force('center', d3.forceCenter(width / 2, height / 2))
-                .force('collision', d3.forceCollide().radius(d => Math.sqrt(d.karma + 10) * 5 + 10));
-
-            // Draw links
-            const link = g.append('g')
-                .selectAll('line')
-                .data(links)
-                .join('line')
-                .attr('class', 'link')
-                .attr('stroke-width', d => Math.sqrt(d.weight));
-
-            // Draw nodes
-            const node = g.append('g')
-                .selectAll('circle')
-                .data(nodes)
-                .join('circle')
-                .attr('class', 'node')
-                .attr('r', d => Math.sqrt(d.karma + 10) * 5)
-                .attr('fill', d => {
-                    const hue = (d.karma * 30) % 360;
-                    return `hsl(${hue}, 70%, 60%)`;
-                })
-                .call(drag(simulation))
-                .on('mouseover', showTooltip)
-                .on('mousemove', moveTooltip)
-                .on('mouseout', hideTooltip);
-
-            // Add labels
-            const labels = g.append('g')
-                .selectAll('text')
-                .data(nodes)
-                .join('text')
-                .attr('class', 'node-label')
-                .text(d => d.username)
-                .attr('dy', d => Math.sqrt(d.karma + 10) * 5 + 15);
-
-            // Update positions on tick
-            simulation.on('tick', () => {
-                link
-                    .attr('x1', d => d.source.x)
-                    .attr('y1', d => d.source.y)
-                    .attr('x2', d => d.target.x)
-                    .attr('y2', d => d.target.y);
-
-                node
-                    .attr('cx', d => d.x)
-                    .attr('cy', d => d.y);
-
-                labels
-                    .attr('x', d => d.x)
-                    .attr('y', d => d.y);
-            });
-
-            // Tooltip functions
-            function showTooltip(event, d) {
-                tooltip.classed('visible', true);
-                tooltip.html(`
-                    <div class="tooltip-username">${d.username}</div>
-                    <div class="tooltip-stat">
-                        <span class="tooltip-label">Karma:</span>
-                        <span>${d.karma}</span>
-                    </div>
-                    <div class="tooltip-stat">
-                        <span class="tooltip-label">Posts:</span>
-                        <span>${d.posts_count}</span>
-                    </div>
-                    <div class="tooltip-stat">
-                        <span class="tooltip-label">ID:</span>
-                        <span style="font-size: 0.8em; opacity: 0.7;">${d.id.substring(0, 8)}...</span>
-                    </div>
-                `);
-            }
-
-            function moveTooltip(event) {
-                tooltip
-                    .style('left', (event.pageX + 15) + 'px')
-                    .style('top', (event.pageY - 15) + 'px');
-            }
-
-            function hideTooltip() {
-                tooltip.classed('visible', false);
-            }
-
-            // Drag behavior
-            function drag(simulation) {
-                function dragstarted(event) {
-                    if (!event.active) simulation.alphaTarget(0.3).restart();
-                    event.subject.fx = event.subject.x;
-                    event.subject.fy = event.subject.y;
-                }
-
-                function dragged(event) {
-                    event.subject.fx = event.x;
-                    event.subject.fy = event.y;
-                }
-
-                function dragended(event) {
-                    if (!event.active) simulation.alphaTarget(0);
-                    event.subject.fx = null;
-                    event.subject.fy = null;
-                }
-
-                return d3.drag()
-                    .on('start', dragstarted)
-                    .on('drag', dragged)
-                    .on('end', dragended);
-            }
-
-        }).catch(error => {
-            document.getElementById('loading').innerHTML = `
-                <div style="color: #ff6b6b;">
-                    <div style="font-size: 3em; margin-bottom: 10px;">⚠️</div>
-                    <div>Error loading network data</div>
-                    <div style="font-size: 0.8em; margin-top: 10px; opacity: 0.7;">${error.message}</div>
-                </div>
-            `;
-        });
     </script>
 </body>
 </html>

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moltbook Network - 3D Globe 🌍</title>
+    <script src="https://unpkg.com/three@0.159.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/globe.gl@2.31.0/dist/globe.gl.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: white;
+            overflow: hidden;
+        }
+
+        #globeViz {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 5px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            opacity: 0.7;
+            font-size: 0.9em;
+        }
+
+        #stats {
+            position: absolute;
+            top: 100px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            z-index: 100;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .stat {
+            margin: 8px 0;
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .stat-label {
+            opacity: 0.7;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            z-index: 100;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            pointer-events: auto;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 0.9em;
+            transition: transform 0.2s;
+        }
+
+        .control-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+
+        #tooltip {
+            position: absolute;
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 8px;
+            pointer-events: none;
+            font-size: 0.85em;
+            max-width: 250px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.2s;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(102, 126, 234, 0.5);
+        }
+
+        #tooltip.visible {
+            opacity: 1;
+        }
+
+        .tooltip-username {
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 8px;
+            color: #667eea;
+        }
+
+        .tooltip-location {
+            margin: 4px 0;
+            opacity: 0.8;
+            font-style: italic;
+        }
+
+        .tooltip-stat {
+            margin: 4px 0;
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .tooltip-label {
+            opacity: 0.7;
+        }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5em;
+            z-index: 1000;
+            text-align: center;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-size: 0.85em;
+            z-index: 100;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .legend-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .legend-item {
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-circle {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <h1>🌍 Moltbook Network - 3D Globe</h1>
+        <div class="subtitle">AI Agents Around the World</div>
+    </div>
+
+    <div id="stats">
+        <div class="stat">
+            <span class="stat-label">Agents:</span>
+            <span class="stat-value" id="agent-count">-</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">Countries:</span>
+            <span class="stat-value" id="country-count">-</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">Connections:</span>
+            <span class="stat-value" id="connection-count">-</span>
+        </div>
+    </div>
+
+    <div id="controls">
+        <div style="margin-bottom: 10px; font-weight: bold; color: #667eea;">View Controls</div>
+        <button class="control-btn" onclick="rotateGlobe()">🔄 Auto-Rotate</button>
+        <button class="control-btn" onclick="viewFromSpace()">🛰️ Space View</button>
+        <button class="control-btn" onclick="resetView()">🏠 Reset View</button>
+    </div>
+
+    <div id="legend">
+        <div class="legend-title">Legend</div>
+        <div class="legend-item">
+            <div class="legend-circle" style="box-shadow: 0 0 15px rgba(102, 126, 234, 0.8);"></div>
+            <span>Active Agent (has posts)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-circle" style="opacity: 0.5;"></div>
+            <span>Inactive Agent</span>
+        </div>
+        <div class="legend-item">
+            <div style="width: 40px; height: 2px; background: linear-gradient(90deg, #667eea, #764ba2); box-shadow: 0 0 5px rgba(102, 126, 234, 0.5);"></div>
+            <span>Connection</span>
+        </div>
+    </div>
+
+    <div id="loading">
+        <div class="spinner"></div>
+        <div style="margin-top: 15px;">Loading globe...</div>
+    </div>
+
+    <div id="tooltip"></div>
+    <div id="globeViz"></div>
+
+    <script>
+        let globe;
+        let rotating = false;
+
+        // Load data and initialize globe
+        fetch('network-data.json')
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+
+                // Prepare data
+                const agents = data.nodes;
+                const connections = data.edges;
+
+                // Add default locations for agents without coordinates
+                agents.forEach((agent, idx) => {
+                    if (!agent.location_lat || !agent.location_lng) {
+                        // Distribute evenly around major cities if no location
+                        const cities = [
+                            { lat: 49.2827, lng: -123.1207, city: 'Vancouver', country: 'Canada' },
+                            { lat: 37.7749, lng: -122.4194, city: 'San Francisco', country: 'USA' },
+                            { lat: 51.5074, lng: -0.1278, city: 'London', country: 'UK' },
+                            { lat: 35.6762, lng: 139.6503, city: 'Tokyo', country: 'Japan' },
+                            { lat: -33.8688, lng: 151.2093, city: 'Sydney', country: 'Australia' },
+                            { lat: 52.5200, lng: 13.4050, city: 'Berlin', country: 'Germany' },
+                            { lat: 1.3521, lng: 103.8198, city: 'Singapore', country: 'Singapore' },
+                            { lat: -23.5505, lng: -46.6333, city: 'São Paulo', country: 'Brazil' }
+                        ];
+                        const city = cities[idx % cities.length];
+                        agent.lat = city.lat + (Math.random() - 0.5) * 2;
+                        agent.lng = city.lng + (Math.random() - 0.5) * 2;
+                        agent.location_city = city.city;
+                        agent.location_country = city.country;
+                    } else {
+                        agent.lat = agent.location_lat;
+                        agent.lng = agent.location_lng;
+                    }
+                });
+
+                // Create points for agents
+                const pointsData = agents.map(agent => ({
+                    lat: agent.lat,
+                    lng: agent.lng,
+                    size: Math.sqrt(agent.karma + 1) * 0.3,
+                    color: agent.posts_count > 0 ? '#667eea' : '#666',
+                    agent: agent
+                }));
+
+                // Create arcs for connections
+                const arcsData = connections.map(conn => {
+                    const source = agents.find(a => a.id === conn.source);
+                    const target = agents.find(a => a.id === conn.target);
+                    return {
+                        startLat: source.lat,
+                        startLng: source.lng,
+                        endLat: target.lat,
+                        endLng: target.lng,
+                        color: ['rgba(102, 126, 234, 0.3)', 'rgba(118, 75, 162, 0.3)']
+                    };
+                });
+
+                // Update stats
+                const countries = new Set(agents.map(a => a.location_country).filter(Boolean));
+                document.getElementById('agent-count').textContent = agents.length;
+                document.getElementById('country-count').textContent = countries.size;
+                document.getElementById('connection-count').textContent = connections.length;
+
+                // Initialize globe
+                globe = Globe()
+                    (document.getElementById('globeViz'))
+                    .globeImageUrl('//unpkg.com/three-globe/example/img/earth-night.jpg')
+                    .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
+                    .backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png')
+                    .pointsData(pointsData)
+                    .pointAltitude('size')
+                    .pointColor('color')
+                    .pointRadius(0.5)
+                    .pointLabel(d => `
+                        <div style="background: rgba(0,0,0,0.9); padding: 10px; border-radius: 5px; border: 1px solid #667eea;">
+                            <div style="font-weight: bold; color: #667eea; margin-bottom: 5px;">${d.agent.username}</div>
+                            ${d.agent.location_city ? `<div style="opacity: 0.8; font-style: italic;">${d.agent.location_city}, ${d.agent.location_country}</div>` : ''}
+                            <div style="margin-top: 5px;">Karma: ${d.agent.karma} | Posts: ${d.agent.posts_count}</div>
+                        </div>
+                    `)
+                    .arcsData(arcsData)
+                    .arcColor('color')
+                    .arcDashLength(0.4)
+                    .arcDashGap(0.2)
+                    .arcDashAnimateTime(3000)
+                    .arcStroke(0.5)
+                    .arcsTransitionDuration(1000)
+                    .atmosphereColor('#667eea')
+                    .atmosphereAltitude(0.25);
+
+                // Set initial view
+                globe.pointOfView({ lat: 20, lng: 0, altitude: 2.5 });
+
+                // Smooth camera controls
+                globe.controls().autoRotate = false;
+                globe.controls().enableDamping = true;
+                globe.controls().dampingFactor = 0.1;
+                globe.controls().rotateSpeed = 0.5;
+                globe.controls().minDistance = 101;
+                globe.controls().maxDistance = 500;
+
+            })
+            .catch(error => {
+                document.getElementById('loading').innerHTML = `
+                    <div style="color: #ff6b6b;">
+                        <div style="font-size: 3em; margin-bottom: 10px;">⚠️</div>
+                        <div>Error loading globe data</div>
+                        <div style="font-size: 0.8em; margin-top: 10px; opacity: 0.7;">${error.message}</div>
+                    </div>
+                `;
+            });
+
+        // Control functions
+        function rotateGlobe() {
+            rotating = !rotating;
+            if (globe) {
+                globe.controls().autoRotate = rotating;
+                globe.controls().autoRotateSpeed = 0.5;
+            }
+        }
+
+        function viewFromSpace() {
+            if (globe) {
+                globe.pointOfView({ lat: 0, lng: 0, altitude: 3 }, 2000);
+            }
+        }
+
+        function resetView() {
+            if (globe) {
+                globe.pointOfView({ lat: 20, lng: 0, altitude: 2.5 }, 2000);
+                globe.controls().autoRotate = false;
+                rotating = false;
+            }
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (globe) {
+                globe.width(window.innerWidth);
+                globe.height(window.innerHeight);
+            }
+        });
+    </script>
+</body>
+</html>
