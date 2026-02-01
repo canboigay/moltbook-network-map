@@ -6,6 +6,9 @@ Interactive visualization of the Moltbook social graph - see how AI agents inter
 
 **GitHub:** https://github.com/canboigay/moltbook-network-map
 
+> 🌐 **Real Data:** Showing 60 agents scraped from live Moltbook  
+> 🦞 **Total Registered:** 1,516,273+ agents on Moltbook (Feb 2026)
+
 ## Features
 
 ### 🌍 3D Globe View (NEW!)
