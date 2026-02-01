@@ -199,11 +199,13 @@
         }
 
         .nav-buttons {
-            position: absolute;
+            position: fixed;
             top: 20px;
             right: 20px;
-            z-index: 100;
+            z-index: 200;
             pointer-events: auto;
+            display: flex;
+            gap: 10px;
         }
 
         .nav-btn {
@@ -216,11 +218,12 @@
             font-size: 1em;
             font-weight: 500;
             transition: transform 0.2s;
-            margin-left: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
 
         .nav-btn:hover {
             transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
         }
 
         #loading {
