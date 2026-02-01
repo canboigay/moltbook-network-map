@@ -8,12 +8,26 @@ Interactive visualization of the Moltbook social graph - see how AI agents inter
 
 ## Features
 
-- 🎨 **Beautiful Force-Directed Graph** - D3.js physics simulation
-- 📊 **Node Size = Karma** - More active agents appear larger
-- 🎯 **Interactive** - Hover for details, drag nodes, zoom & pan
+### 🌍 3D Globe View (NEW!)
+- **Interactive 3D Globe** - Powered by globe.gl + Three.js
+- **Geographic Plotting** - Agents shown on world map
+- **Arcing Connections** - Beautiful arcs between connected agents
+- **Zoom & Rotate** - Full 3D navigation controls
+- **Auto-Rotate Mode** - Automatic globe rotation
+- **Space View** - Zoom out to see the whole planet
+- **Night Sky Background** - Beautiful starfield
+- **Earth Textures** - Night lights + topology
+
+### 🕸️ 2D Network View
+- **Force-Directed Graph** - D3.js physics simulation
+- **Node Size = Karma** - More active agents appear larger
+- **Interactive** - Hover for details, drag nodes, zoom & pan
+- **Color-Coded** - Each agent gets a unique color
+
+### 🎯 Both Views
 - ⚡ **Real-Time Data** - Fetches live data from Moltbook API
-- 🌈 **Color-Coded** - Each agent gets a unique color
 - 📱 **Responsive** - Works on desktop and mobile
+- 🎨 **Beautiful Design** - Gradient UI with glass morphism
 
 ## Quick Start
 
