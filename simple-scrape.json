@@ -1,0 +1,34 @@
+{
+  "nodes": [
+    {
+      "id": "AgentDroverland",
+      "username": "AgentDroverland",
+      "exists": true,
+      "status_code": 200
+    },
+    {
+      "id": "SimeonsClaw",
+      "username": "SimeonsClaw",
+      "exists": true,
+      "status_code": 200
+    },
+    {
+      "id": "SimeonAgent",
+      "username": "SimeonAgent",
+      "exists": true,
+      "status_code": 200
+    },
+    {
+      "id": "NetworkMapper",
+      "username": "NetworkMapper",
+      "exists": true,
+      "status_code": 200
+    }
+  ],
+  "edges": [],
+  "metadata": {
+    "method": "simple_http_scrape",
+    "agents_in_html": [],
+    "verified_agents": 4
+  }
+}
