@@ -422,6 +422,35 @@
             transform: scale(1.05);
             box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
         }
+
+        #locationStatus {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            z-index: 100;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        #locationStatus.visible {
+            opacity: 1;
+        }
+
+        #locationStatus.success {
+            border-color: rgba(76, 175, 80, 0.5);
+            color: #76af80;
+        }
+
+        #locationStatus.loading {
+            border-color: rgba(255, 193, 7, 0.5);
+            color: #ffc107;
+        }
     </style>
 </head>
 <body>
@@ -490,6 +519,10 @@
         <div style="margin-top: 15px;">Loading globe...</div>
     </div>
 
+    <div id="locationStatus">
+        📍 Detecting your location...
+    </div>
+
     <div id="tooltip"></div>
     <div id="globeViz"></div>
 
@@ -550,6 +583,62 @@
         let rotating = false;
         let currentProfile = null;
         let hoveredPoint = null;
+        let userLocation = null;
+
+        // Calculate distance between two coordinates (Haversine formula)
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Earth's radius in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // Get user's location
+        function getUserLocation() {
+            const statusEl = document.getElementById('locationStatus');
+            statusEl.classList.add('visible', 'loading');
+            statusEl.textContent = '📍 Detecting your location...';
+
+            if ('geolocation' in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        statusEl.classList.remove('loading');
+                        statusEl.classList.add('success');
+                        statusEl.textContent = '📍 Showing agents near you';
+                        
+                        setTimeout(() => {
+                            statusEl.classList.remove('visible');
+                        }, 3000);
+                        
+                        console.log('User location:', userLocation);
+                    },
+                    (error) => {
+                        console.log('Location error:', error.message);
+                        statusEl.classList.remove('loading', 'visible');
+                        // Continue without location filtering
+                    },
+                    {
+                        enableHighAccuracy: false,
+                        timeout: 5000,
+                        maximumAge: 300000 // Cache for 5 minutes
+                    }
+                );
+            } else {
+                statusEl.classList.remove('visible');
+            }
+        }
+
+        // Start getting location
+        getUserLocation();
 
         // Load data and initialize globe
         fetch('network-data.json')
@@ -558,7 +647,7 @@
                 document.getElementById('loading').style.display = 'none';
 
                 // Prepare data
-                const agents = data.nodes;
+                let agents = data.nodes;
                 const connections = data.edges;
 
                 // Add default locations for agents without coordinates
@@ -585,6 +674,26 @@
                         agent.lng = agent.location_lng;
                     }
                 });
+
+                // If user location is available, calculate distances and prioritize nearby agents
+                if (userLocation) {
+                    agents.forEach(agent => {
+                        agent.distance = calculateDistance(
+                            userLocation.lat, 
+                            userLocation.lng, 
+                            agent.lat, 
+                            agent.lng
+                        );
+                    });
+                    
+                    // Sort by distance (closest first)
+                    agents.sort((a, b) => a.distance - b.distance);
+                    
+                    // Optional: Limit to nearby agents (e.g., within 5000km)
+                    // agents = agents.filter(a => a.distance < 5000);
+                    
+                    console.log(`Showing ${agents.length} agents, closest is ${agents[0].username} at ${Math.round(agents[0].distance)}km`);
+                }
 
                 // Create points for agents
                 const pointsData = agents.map(agent => ({
@@ -675,8 +784,16 @@
                     .atmosphereColor('#667eea')
                     .atmosphereAltitude(0.25);
 
-                // Set initial view
-                globe.pointOfView({ lat: 20, lng: 0, altitude: 2.5 });
+                // Set initial view - use user's location if available
+                if (userLocation) {
+                    globe.pointOfView({ 
+                        lat: userLocation.lat, 
+                        lng: userLocation.lng, 
+                        altitude: 2.5 
+                    });
+                } else {
+                    globe.pointOfView({ lat: 20, lng: 0, altitude: 2.5 });
+                }
 
                 // Smooth camera controls
                 globe.controls().autoRotate = false;
